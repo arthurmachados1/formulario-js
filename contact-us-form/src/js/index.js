@@ -3,11 +3,14 @@ const $stepDescription = $('#step-description');
 const $stepOne = $('.step.one');
 const $stepTwo = $('.step.two');
 const $stepThree = $('.step.three');
+const $title = $('#title')
 
 const $inputContainerBtnFormOne = $('#containerBtnFormOne');
 const $inputBtnFormOne = $('#btnFormOne');
 const $inputContainerBtnFormTwo = $('#containerBtnFormTwo');
 const $inputBtnFormTwo = $('#btnFormTwo');
+const $inputContainerBtnThree = $('#containerBtnFormThree')
+const $inputBtnFormThree = $('#btnFormThree')
 const $inputNome = $('#nome');
 const $inputSobrenome = $('#sobrenome');
 const $inputDataNascimento = $('#dataNascimento');
@@ -17,6 +20,8 @@ const $inputEndereco = $('#endereco');
 const $inputComplemento = $('#complemento');
 const $inputCidade = $('#cidade');
 const $inputCep = $('#cep');
+const $inputHabilidades = $('#habilidades');
+const $inputPontosForte = $('#pontosForte');
 
 
 
@@ -29,6 +34,9 @@ let emailValido = false;
 let enderecoValido = false;
 let cidadeValido = false;
 let cepValido = false;
+let habilidadesValido = false;
+let pontosForteValido = false;
+
 
 const minLengthText = 2;
 const minLengthTextArea = 10;
@@ -69,7 +77,39 @@ function iniciarFormulario3() {
     $stepDescription.text('Precisamos desses dados para que possamos entrar em conato se necessário ')
     $stepTwo.hide();
     $stepThree.show();
+
+    $inputHabilidades.keyup(function() {
+        habilidadesValido = validarInput(this, minLengthTextArea);
+        validarFormularioTres();
+    });
+
+    $inputPontosForte.keyup(function() {
+        pontosForteValido = validarInput(this, minLengthTextArea);
+        validarFormularioTres();
+    });
 }
+
+
+
+function finalizarFormulario() {
+    $stepThree.hide();
+    $stepDescription.hide();
+    $title.text('Inscrição finalizada com sucesso!')
+    $stepText.text('Entraremos em contato em breve.')
+}
+
+function validarFormularioTres() {
+    if(habilidadesValido && pontosForteValido) {
+        $inputContainerBtnThree.removeClass('disabled');
+        $inputBtnFormThree.removeClass('disabled');
+        $inputBtnFormThree.off('click').on('click', salvarNoTrello);
+    } else {
+        $inputContainerBtnThree.addClass('disabled');
+        $inputBtnFormThree.addClass('disabled');
+        $inputBtnFormThree.off('click').on('click')
+    }
+}
+
 
     function iniciarFormulario2() {
         $stepText.text('Passo 2 de 3 - Dados de correspondência');
@@ -160,6 +200,58 @@ $inputDataNascimento.on('focus', function(){
         }
     })
     
+
+    async function salvarNoTrello() {
+        try{
+            const nome = $inputNome.val();
+            const sobrenome = $inputSobrenome.val();
+            const email = $inputEmail.val();
+            const dataNascimento = $inputDataNascimento.val();
+            const minibio = $inputMinibio.val();
+            const endereco = $inputEndereco.val();
+            const complemento = $inputComplemento.val();
+            const cidade = $inputCidade.val();
+            const cep = $inputCep.val();
+            const habilidades = $inputHabilidades.val();
+            const pontosFortes = $inputPontosForte.val();
+    
+            if(!nome || !sobrenome || !email || !dataNascimento || !endereco || !cidade || !cep || !habilidades || !pontosFortes) {
+                return alert('Favor preencher todos os dados obrigatórios.')
+            }
+
+                const body = {
+                name: 'Formulário de candidatura - ' + nome,
+                desc: `Seguem dados do candidato:
+                    ------------------- Dados pessoais ------------
+                    Nome: ${nome}
+                    Sobrenome: ${sobrenome}
+                    Email: ${email}
+                    Data nascimento: ${dataNascimento}
+                    Minibio: ${minibio}
+                    ------------------- Dados de correspondência ------------
+                    Endereço: ${endereco}
+                    Complemento: ${complemento}
+                    Cidade: ${cidade}
+                    CEP: ${cep}
+                    ------------------- Dados de recrutamento ------------
+                    Habilidades: ${habilidades}
+                    Pontos Fortes: ${pontosForte}`
+                };
+            await feitch('https://api.trello.com/1/cards?idList=658059e7457a01562bbcfbfc&key=822a958ab3167609ae9d734c2ee18749&token=ATTA07228f6d6c17dec6c0116bd52436c061315e092a709f1e9d48c69421f16a04e5E0777DD6' , {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body)
+            })
+            return finalizarFormulario();
+        }catch(e){
+            console.log('Ocorreu um erro ao salvar no trello')
+        }
+    }
+    
+
+
 init();
 
 
